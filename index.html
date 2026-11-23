@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Developer Performance Task | Technical Responses</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f4f0e6;
+      --surface: #fffdf8;
+      --inset: #ece6d9;
+      --ink: #1f1c17;
+      --ink-2: #48433a;
+      --ink-3: #6b6457;
+      --rule: #d8d0bf;
+      --rule-soft: #e6dfd0;
+      --accent: #c2410c;
+      --accent-ink: #9a3412;
+      --accent-wash: #f8e1d0;
+      --good: #2d6a3a;
+      --good-wash: #e2eedd;
+      --bad: #a52a1f;
+      --bad-wash: #f6e0db;
+      --c0: #3451c6; --c1: #4fa13c; --c2: #a3302b; --c3: #8a4fb8;
+      --serif: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+      --sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    ::selection { background: var(--accent-wash); }
+    a { color: inherit; }
+    button { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    code { font-family: var(--mono); font-size: .9em; }
+    p code, li code, .aside code { background: var(--inset); padding: .08em .35em; border-radius: 3px; }
+    [hidden] { display: none !important; }
+
+    /* Layout: a sticky contents rail beside one reading column */
+    .page { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 64px; max-width: 1120px; margin: 0 auto; padding: 0 32px; }
+    .rail { position: sticky; top: 0; align-self: start; height: 100vh; padding: 64px 0 32px; display: flex; flex-direction: column; }
+    .rail-title { font: 500 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 16px; }
+    .rail ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--rule); }
+    .rail a { display: flex; gap: 12px; align-items: baseline; padding: 7px 0 7px 16px; margin-left: -1px; border-left: 2px solid transparent; text-decoration: none; color: var(--ink-3); font-size: 14px; line-height: 1.35; transition: color .15s, border-color .15s; }
+    .rail a:hover { color: var(--ink); }
+    .rail a[aria-current="true"] { color: var(--ink); border-left-color: var(--accent); }
+    .rail .n { font: 500 12px var(--mono); min-width: 2ch; }
+    .rail a[aria-current="true"] .n { color: var(--accent-ink); }
+    .rail-foot { margin: auto 0 0; font: 12px/1.6 var(--mono); color: var(--ink-3); }
+    main { padding: 72px 0 120px; min-width: 0; max-width: 800px; }
+
+    /* Masthead */
+    .masthead { margin-bottom: 80px; }
+    .eyebrow { font: 500 12px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent-ink); margin: 0 0 22px; }
+    h1 { font: 400 clamp(2.6rem, 6.5vw, 4.25rem)/1.02 var(--serif); letter-spacing: -.02em; margin: 0 0 24px; }
+    h1 em { color: var(--accent); }
+    .lede { font-size: 1.125rem; line-height: 1.6; color: var(--ink-2); max-width: 58ch; margin: 0; }
+
+    /* Question sections */
+    .q { border-top: 2px solid var(--ink); padding-top: 14px; margin-bottom: 104px; scroll-margin-top: 24px; }
+    .q-meta { display: flex; justify-content: space-between; gap: 16px; font: 500 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 18px; }
+    .q-meta .num { color: var(--accent-ink); }
+    .q h2 { font: 400 clamp(1.9rem, 4.2vw, 2.6rem)/1.1 var(--serif); letter-spacing: -.015em; margin: 0 0 18px; }
+    .brief { margin: 0 0 28px; padding-left: 16px; border-left: 2px solid var(--rule); color: var(--ink-2); max-width: 64ch; }
+    .brief p { margin: 0; }
+    .q h3 { font: 600 1.08rem/1.35 var(--sans); margin: 52px 0 10px; }
+    .q h3 .part { font: 500 .8rem var(--mono); color: var(--accent-ink); margin-right: 10px; letter-spacing: .04em; }
+    .q > p:not(.q-meta), .prose { max-width: 66ch; color: var(--ink-2); }
+    .aside { font-size: 14px; color: var(--ink-3); margin: 12px 0 0; max-width: 66ch; }
+    .fine { font-size: 13px; color: var(--ink-3); margin: 16px 0 0; }
+
+    /* Code listings (filled in by script from the scripts that actually run) */
+    .listing { position: relative; margin: 20px 0 28px; border: 1px solid var(--rule); border-radius: 6px; background: var(--inset); overflow: hidden; }
+    .listing-bar { display: flex; align-items: center; gap: 10px; padding: 7px 8px 7px 14px; border-bottom: 1px solid var(--rule); font: 12px var(--mono); color: var(--ink-3); background: #e6dfd0; }
+    .listing-bar .file { color: var(--ink); font-weight: 500; }
+    .listing-bar .tag { font-size: 11px; padding: 1px 6px; border-radius: 3px; background: var(--accent-wash); color: var(--accent-ink); }
+    .listing-bar .spacer { flex: 1; }
+    .listing pre { margin: 0; padding: 14px 0; overflow-x: auto; font: 13px/1.7 var(--mono); tab-size: 2; counter-reset: line; color: #2e2a23; }
+    .listing code { font-size: inherit; display: block; min-width: max-content; padding-right: 20px; }
+    .ln::before { counter-increment: line; content: counter(line); display: inline-block; width: 3.5ch; margin-right: 18px; text-align: right; color: #a1998a; user-select: none; }
+    .listing.is-collapsed pre { max-height: calc(13px * 1.7 * 20 + 14px); overflow-y: hidden; }
+    .listing.is-collapsed .listing-more::before { content: ''; position: absolute; left: 0; right: 0; bottom: 100%; height: 72px; background: linear-gradient(rgba(236, 230, 217, 0), var(--inset)); pointer-events: none; }
+    .listing-more { position: relative; display: block; width: 100%; border: 0; border-top: 1px solid var(--rule); background: var(--inset); padding: 9px; font: 500 12px var(--mono); color: var(--ink-2); cursor: pointer; }
+    .listing-more:hover { color: var(--ink); background: #e6dfd0; }
+    .t-kw { color: #9a3412; }
+    .t-str { color: #4b6a1c; }
+    .t-num, .t-lit { color: #1f4ea3; }
+    .t-com { color: #857d6e; font-style: italic; }
+    .t-fn { color: var(--ink); font-weight: 600; }
+    .t-type { color: #6b3a8c; }
+    .t-key { color: var(--ink); font-weight: 500; }
+    .t-re, .t-param { color: #8a4b00; }
+    .t-p { color: #7d7566; }
+    .t-kw.swapped { background: var(--accent-wash); border-radius: 2px; animation: flash 1.2s ease-out; }
+
+    /* Buttons and controls */
+    .btn { appearance: none; border: 1px solid var(--ink); background: var(--ink); color: var(--paper); font: 500 14px/1 var(--sans); padding: 10px 14px; border-radius: 4px; cursor: pointer; transition: background .15s, border-color .15s; }
+    .btn:hover { background: #3a352c; }
+    .btn:active { transform: translateY(1px); }
+    .btn-ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
+    .btn-ghost:hover { background: var(--inset); border-color: var(--ink-3); }
+    .btn-tiny { font: 500 12px/1 var(--mono); padding: 6px 9px; }
+    .field-label, .seg legend { display: block; font: 500 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 7px; padding: 0; }
+    .seg { border: 0; padding: 0; margin: 0; min-width: 0; }
+    .seg-opts { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px; border: 1px solid var(--rule); border-radius: 5px; background: var(--paper); }
+    .seg label { position: relative; }
+    .seg input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+    .seg span { display: block; padding: 6px 11px; border-radius: 3px; font-size: 14px; color: var(--ink-2); white-space: nowrap; cursor: pointer; transition: background .15s, color .15s; }
+    .seg label:hover input:not(:checked) + span { background: var(--inset); color: var(--ink); }
+    .seg input:checked + span { background: var(--ink); color: var(--paper); }
+    .seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .seg small { font-size: 11px; opacity: .7; }
+
+    /* Demo panels */
+    .demo { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 22px; margin: 0 0 12px; }
+    .demo-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; margin-bottom: 18px; }
+    .demo-head .aside { margin: 0; max-width: 34ch; }
+    .out { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--rule-soft); font-family: var(--mono); }
+    .out-call { color: var(--ink-3); font-size: 14px; }
+    .out-arrow { color: var(--ink-3); }
+    .out-value { font: 500 15px var(--mono); color: var(--ink); overflow-wrap: anywhere; padding: 1px 4px; margin: 0 -4px; border-radius: 3px; }
+    .flash { animation: flash .7s ease-out; }
+    @keyframes flash { from { background: var(--accent-wash); } to { background: transparent; } }
+    .scroll-x { overflow-x: auto; }
+
+    /* Q1: ages plot */
+    .range-row { display: grid; grid-template-columns: auto minmax(0, 1fr) 3ch auto; align-items: center; gap: 14px; margin-bottom: 22px; }
+    .range-row .field-label { margin: 0; }
+    .range-row input { width: 100%; accent-color: var(--ink); margin: 0; }
+    .range-out { font: 600 15px var(--mono); }
+    .ages { position: relative; height: 190px; padding-left: 52px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; align-items: end; border-bottom: 1px solid var(--ink-3); }
+    .age-col { height: 100%; display: flex; align-items: flex-end; justify-content: center; }
+    .age-bar { position: relative; width: min(100%, 38px); background: var(--rule); border-radius: 4px 4px 0 0; transition: background .2s; }
+    .age-bar b { position: absolute; z-index: 2; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 3px; padding: 0 3px; background: var(--surface); font: 500 12px var(--mono); color: var(--ink-3); }
+    .age-col.is-in .age-bar { background: var(--accent); }
+    .age-col.is-in .age-bar b { color: var(--ink); }
+    .cutoff { position: absolute; z-index: 1; left: 0; right: -8px; height: 0; border-top: 1.5px solid var(--ink); pointer-events: none; transition: bottom .12s; }
+    .cutoff span { position: absolute; left: 0; top: -9px; padding: 1px 5px; border-radius: 3px; font: 500 11px/1.4 var(--mono); background: var(--ink); color: var(--surface); white-space: nowrap; }
+    .age-names { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; padding-left: 52px; margin-top: 8px; text-align: center; font-size: 13px; color: var(--ink-3); }
+    .age-names .is-in { color: var(--ink); font-weight: 600; }
+
+    /* Q2: cards */
+    .cards { display: flex; justify-content: center; gap: clamp(12px, 4vw, 28px); padding: 6px 0 26px; }
+    .card { width: clamp(84px, 22vw, 112px); aspect-ratio: 100 / 140; background: #fff; border: 1px solid var(--rule); border-radius: 9px; box-shadow: 0 1px 0 var(--rule), 0 8px 16px -10px rgba(60, 45, 20, .35); transition: rotate .3s; }
+    .card:nth-child(1) { rotate: -2.5deg; }
+    .card:nth-child(3) { rotate: 2deg; }
+    .card svg { display: block; width: 100%; height: 100%; }
+    .card.pop { animation: pop .28s ease-out; }
+    @keyframes pop { 40% { scale: 1.06; } }
+    .attr-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .attr-table thead th:nth-child(n+2):nth-child(-n+4) { width: 22%; }
+    .attr-table th, .attr-table td { padding: 5px 6px; border-bottom: 1px solid var(--rule-soft); text-align: left; }
+    .attr-table thead th { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+    .attr-table tbody th { font: 500 13px var(--mono); color: var(--ink-2); }
+    .attr-table tr { transition: background .2s; }
+    .attr-table tr.is-bad { background: var(--bad-wash); }
+    .val { width: 100%; text-align: left; font: 13px var(--mono); background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 4px 7px; cursor: pointer; white-space: nowrap; }
+    .val:hover { border-color: var(--ink-3); background: #fff; }
+    .check { font: 500 12px var(--mono); white-space: nowrap; }
+    tr.is-ok .check { color: var(--good); }
+    tr.is-bad .check { color: var(--bad); }
+    .verdict-text { font-family: var(--sans); font-size: 14px; color: var(--ink-2); }
+    .out-value.is-true { color: var(--good); }
+    .out-value.is-false { color: var(--bad); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+    /* Q3: reverse */
+    .rev-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 14px; }
+    .rev-row input, .rev-out { font: 500 20px/1.3 var(--mono); padding: 12px 14px; border-radius: 5px; min-height: 52px; width: 100%; }
+    .rev-row input { border: 1px solid var(--rule); background: var(--paper); color: var(--ink); }
+    .rev-row input:focus { border-color: var(--ink-3); background: #fff; }
+    .rev-row input[aria-invalid="true"] { border-color: var(--bad); background: var(--bad-wash); }
+    .rev-out { display: block; background: var(--inset); overflow-wrap: anywhere; }
+    .rev-arrow { font: 20px var(--mono); color: var(--ink-3); }
+    .field-error { color: var(--bad); font-size: 14px; margin: 8px 0 0; }
+    .examples { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 14px 0 0; font-size: 13px; color: var(--ink-3); }
+    .chip { border: 1px solid var(--rule); background: var(--paper); border-radius: 4px; padding: 3px 8px; font: 12px var(--mono); cursor: pointer; color: var(--ink-2); }
+    .chip:hover { border-color: var(--ink-3); color: var(--ink); }
+    .trace { width: 100%; border-collapse: collapse; font: 13px var(--mono); margin-top: 22px; }
+    .trace caption { text-align: left; font: 500 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); padding-bottom: 6px; }
+    .trace th { font: 500 12px var(--mono); color: var(--ink-2); text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--ink-3); white-space: nowrap; }
+    .trace td { text-align: right; padding: 5px 10px; border-bottom: 1px solid var(--rule-soft); white-space: nowrap; }
+    .trace th:first-child, .trace td:first-child { text-align: left; color: var(--ink-3); width: 4em; }
+    .trace mark { background: none; color: var(--accent-ink); font-weight: 600; }
+    .trace tbody tr { animation: rowIn .25s ease-out backwards; }
+    .trace tr.more td { color: var(--ink-3); font-style: italic; }
+    @keyframes rowIn { from { opacity: 0; translate: 0 -4px; } }
+
+    /* Q4: join explorer */
+    .join-tables { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 24px; }
+    .tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .tbl caption { text-align: left; font: 500 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); padding-bottom: 6px; }
+    .tbl caption .count { color: var(--accent-ink); margin-left: 6px; }
+    .tbl th { font: 500 12px var(--mono); color: var(--ink-2); text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--ink-3); white-space: nowrap; }
+    .tbl td { padding: 6px 10px; border-bottom: 1px solid var(--rule-soft); white-space: nowrap; transition: background .12s, color .12s; }
+    .tbl td.id { font: 13px var(--mono); color: var(--ink-2); }
+    .tbl tr.is-linked td { background: var(--accent-wash); }
+    .tbl tr.is-dropped td { color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--bad); }
+    .tbl-result tbody tr { cursor: default; animation: rowIn .25s ease-out backwards; }
+    .tbl-result tbody tr:focus-visible { outline-offset: -2px; }
+    .null { font: italic 13px var(--mono); color: var(--ink-3); }
+    .mini { display: block; font: 11px/1.3 var(--mono); color: var(--ink-3); }
+    .join-result { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--rule-soft); }
+
+    /* Q5: charts */
+    .chart-tools { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 14px 24px; margin-bottom: 14px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 4px; margin-left: -9px; }
+    .legend button { display: inline-flex; align-items: center; gap: 8px; border: 1px solid transparent; background: none; padding: 5px 9px; border-radius: 4px; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+    .legend button:hover, .legend button[aria-pressed="true"] { border-color: var(--rule); background: var(--surface); color: var(--ink); }
+    .swatch { width: 10px; height: 10px; border-radius: 2px; background: var(--c); transition: background .3s; }
+    .charts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; transition: opacity .25s, filter .25s; }
+    .chart-panel { margin: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 14px 12px; min-width: 0; }
+    .chart-title { font: 500 13px/1.4 var(--sans); color: var(--ink); margin: 0 0 8px; }
+    .chart-canvas-wrap { position: relative; height: 260px; }
+    .chart-alert { color: var(--bad); font-size: 14px; }
+
+    /* Q5(b): filters, request pipeline, status */
+    .filters { display: flex; flex-wrap: wrap; align-items: end; gap: 16px 22px; padding-bottom: 18px; margin-bottom: 18px; border-bottom: 1px solid var(--rule-soft); }
+    .filters .btn { margin-left: auto; }
+    .pipeline { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 0; margin: 0; padding: 0; font-size: 13px; }
+    .pipeline li { display: flex; align-items: center; }
+    .pipeline li + li::before { content: ''; width: 16px; height: 1px; background: var(--rule); margin: 0 4px; }
+    .step { display: inline-flex; align-items: center; gap: 7px; padding: 5px 9px; border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); color: var(--ink-3); transition: border-color .2s, background .2s, color .2s; white-space: nowrap; }
+    .step::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--rule); transition: background .2s; }
+    .step code { font-size: 12px; background: none; padding: 0; }
+    li[data-state="active"] .step { border-color: var(--ink-3); color: var(--ink); }
+    li[data-state="active"] .step::before { background: var(--accent); animation: pulse .9s ease-in-out infinite; }
+    li[data-state="done"] .step { color: var(--ink); border-color: #a9c4a5; background: var(--good-wash); }
+    li[data-state="done"] .step::before { background: var(--good); }
+    li[data-state="skipped"] .step { border-style: dashed; opacity: .75; }
+    li[data-state="skipped"] .step::after { content: 'mocked'; font: 10px var(--mono); letter-spacing: .04em; color: var(--ink-3); }
+    li[data-state="failed"] .step { color: var(--bad); border-color: #e0a59d; background: var(--bad-wash); }
+    li[data-state="failed"] .step::before { background: var(--bad); }
+    @keyframes pulse { 50% { opacity: .25; } }
+    .request-line { font: 12px var(--mono); color: var(--ink-3); margin: 10px 0 0; overflow-wrap: anywhere; }
+    .request-line b { color: var(--ink-2); font-weight: 600; margin-right: 6px; }
+    .status { display: flex; align-items: center; gap: 10px; min-height: 24px; margin: 18px 0 14px; font-size: 14px; color: var(--ink-2); }
+    .status::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
+    .status[data-state="loading"]::before { background: var(--accent); animation: pulse .9s ease-in-out infinite; }
+    .status[data-state="ok"]::before { background: var(--good); }
+    .status[data-state="error"] { color: var(--bad); }
+    .status[data-state="error"]::before { background: var(--bad); }
+    .status[data-state="error"] ~ .charts-grid { opacity: .35; filter: grayscale(1); }
+    .steps { list-style: none; counter-reset: step; margin: 0 0 8px; padding: 0; max-width: 68ch; }
+    .steps li { counter-increment: step; position: relative; padding: 10px 0 10px 40px; border-bottom: 1px solid var(--rule-soft); color: var(--ink-2); }
+    .steps li::before { content: counter(step, decimal-leading-zero); position: absolute; left: 0; top: 12px; font: 500 12px var(--mono); color: var(--accent-ink); }
+
+    .colophon { border-top: 1px solid var(--rule); padding-top: 18px; font-size: 13px; color: var(--ink-3); max-width: 66ch; }
+
+    @media (max-width: 980px) {
+      .page { display: block; padding: 0 16px; }
+      .rail { position: sticky; top: 0; z-index: 20; height: auto; padding: 0; margin: 0 -16px; background: var(--paper); border-bottom: 1px solid var(--rule); }
+      .rail-title, .rail-foot { display: none; }
+      .rail ol { display: flex; border: 0; overflow-x: auto; scrollbar-width: none; padding: 0 6px; }
+      .rail ol::-webkit-scrollbar { display: none; }
+      .rail a { border-left: 0; border-bottom: 2px solid transparent; margin: 0; padding: 12px 10px 10px; white-space: nowrap; font-size: 13px; gap: 6px; }
+      .rail a[aria-current="true"] { border-bottom-color: var(--accent); }
+      main { padding-top: 44px; }
+      .q { scroll-margin-top: 60px; }
+    }
+    @media (max-width: 720px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .join-tables { grid-template-columns: 1fr; }
+      .masthead { margin-bottom: 56px; }
+      .q { margin-bottom: 80px; }
+    }
+    @media (max-width: 560px) {
+      .demo { padding: 16px 14px; }
+      .range-row { grid-template-columns: auto minmax(0, 1fr) 3ch; }
+      .range-row .btn { grid-column: 1 / -1; justify-self: start; }
+      .rev-row { grid-template-columns: 1fr; gap: 6px; }
+      .rev-arrow { rotate: 90deg; justify-self: center; }
+      .ages, .age-names { gap: 4px; padding-left: 42px; }
+      .age-names { font-size: 11px; letter-spacing: -.01em; }
+      .tbl th { font-size: 11px; }
+      .tbl th, .tbl td { padding: 6px 5px; }
+      .pipeline { gap: 6px; }
+      .pipeline li + li::before { display: none; }
+      .legend { margin-left: -6px; gap: 0; }
+      .legend button { padding: 4px 6px; gap: 6px; }
+      .attr-table th, .attr-table td { padding: 4px 3px; }
+      .val { font-size: 12px; padding: 4px 5px; }
+      .check .word { display: none; }
+      .filters .btn { margin-left: 0; }
+      .listing pre { font-size: 12px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+    }
+    @media print {
+      .rail { display: none; }
+      .page { display: block; }
+      .listing.is-collapsed pre { max-height: none; }
+      .listing-more, .copy { display: none; }
+    }
+
+
+    /* NYCPS-inspired presentation layer for an independent technical assessment.
+       Plain-language headings, accessible controls, and restrained colors.
+       This is not a reproduction of the official NYCPS site or brand. */
+    :root {
+      --paper: #f5f7fa;
+      --surface: #ffffff;
+      --inset: #f1f5f9;
+      --ink: #172b42;
+      --ink-2: #324a60;
+      --ink-3: #536778;
+      --rule: #cbd5df;
+      --rule-soft: #e2e9ef;
+      --accent: #0063a6;
+      --accent-ink: #004a80;
+      --accent-wash: #e5f1f8;
+      --good: #176437;
+      --good-wash: #e7f3eb;
+      --bad: #a02222;
+      --bad-wash: #fff0ee;
+      --sans: Arial, Helvetica, sans-serif;
+      --serif: Arial, Helvetica, sans-serif;
+      --mono: Consolas, Menlo, 'Courier New', monospace;
+    }
+    body { background: var(--paper); font: 16px/1.55 var(--sans); }
+    .site-banner { background: #003b71; color: #fff; border-bottom: 4px solid #146eae; }
+    .site-banner-inner { max-width: 1240px; min-height: 58px; margin: auto; padding: 12px 32px; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; justify-content: space-between; }
+    .site-banner-title { font-size: 16px; font-weight: 700; letter-spacing: 0; }
+    .site-banner-note { font-size: 13px; color: #edf6fc; }
+    .page { max-width: 1240px; grid-template-columns: 210px minmax(0,1fr); gap: 40px; padding: 0 32px; }
+    .rail { padding-top: 48px; top: 24px; height: calc(100vh - 24px); }
+    .rail-title { font: 700 14px/1.3 var(--sans); letter-spacing: 0; text-transform: none; color: var(--ink); margin-bottom: 14px; }
+    .rail ol { border-left: 0; }
+    .rail a { border-left: 3px solid transparent; padding: 10px 10px 10px 14px; margin-left: 0; font-size: 14px; color: var(--ink-2); border-radius: 0; }
+    .rail a:hover { color: var(--accent-ink); background: #eaf2f8; }
+    .rail a[aria-current="true"] { background: #e5f1f8; border-left-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+    .rail .n, .rail a[aria-current="true"] .n { font: 700 12px/1.3 var(--sans); color: inherit; }
+    .rail-foot { font: 13px/1.5 var(--sans); color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 18px; }
+    main { max-width: 930px; padding: 48px 0 80px; }
+    .masthead { border-bottom: 3px solid #0b568e; margin-bottom: 52px; padding-bottom: 28px; }
+    .eyebrow { font: 700 13px/1.4 var(--sans); letter-spacing: .02em; text-transform: none; color: var(--accent-ink); margin-bottom: 14px; }
+    h1 { font: 700 clamp(2rem, 4.6vw, 2.7rem)/1.16 var(--sans); letter-spacing: -.025em; margin-bottom: 16px; color: #123456; }
+    h1 em { font-style: normal; color: inherit; }
+    .lede { font: 16px/1.55 var(--sans); color: var(--ink-2); max-width: 76ch; }
+    .q { border-top: 1px solid var(--rule); padding-top: 22px; margin-bottom: 62px; scroll-margin-top: 30px; }
+    .q-meta { font: 700 12px/1.4 var(--sans); text-transform: none; letter-spacing: .02em; color: var(--ink-3); margin-bottom: 12px; }
+    .q-meta .num { color: var(--accent-ink); }
+    .q h2 { font: 700 clamp(1.5rem, 3vw, 1.9rem)/1.3 var(--sans); letter-spacing: -.015em; color: #183b5b; margin-bottom: 16px; }
+    .q h3 { font: 700 18px/1.4 var(--sans); margin-top: 32px; }
+    .q h3 .part { font: 700 14px var(--sans); color: var(--accent-ink); }
+    .brief { background: #edf5fa; border-left: 4px solid #2279b5; padding: 13px 16px; margin-bottom: 22px; max-width: none; color: var(--ink-2); }
+    .aside, .fine { color: var(--ink-3); }
+    .listing { background: #f8fafc; border-color: var(--rule); border-radius: 3px; margin: 16px 0 24px; }
+    .listing-bar { background: #e9eff5; border-bottom-color: var(--rule); color: #41566b; padding: 9px 10px 9px 14px; font: 12px var(--sans); }
+    .listing-bar .file { color: #183a56; font-weight: 700; }
+    .listing-bar .tag { color: var(--accent-ink); background: #d8eafa; }
+    .listing pre { color: #253546; font-size: 13px; line-height: 1.62; }
+    .ln::before { color: #77889a; }
+    .listing-more { background: #edf2f7; font: 700 12px var(--sans); border-color: var(--rule); }
+    .listing-more:hover { background: #ddeaf4; }
+    .listing.is-collapsed .listing-more::before { background: linear-gradient(rgba(248,250,252,0), #f8fafc); }
+    .t-kw { color: #005e9e; }
+    .t-str { color: #27652d; }
+    .t-num, .t-lit { color: #005e9e; }
+    .t-com { color: #576b7c; }
+    .t-type { color: #694892; }
+    .t-p { color: #455d70; }
+    .t-kw.swapped { background: #e5f1f8; }
+    .btn { background: #005b96; border-color: #005b96; color: #fff; border-radius: 3px; font: 700 14px/1.2 var(--sans); padding: 10px 16px; }
+    .btn:hover { background: #004779; border-color: #004779; }
+    .btn-ghost { background: #fff; color: #00558d; border-color: #005b96; }
+    .btn-ghost:hover { background: #eaf4fa; border-color: #004779; color: #004779; }
+    .btn-tiny { font: 700 12px var(--sans); }
+    .field-label, .seg legend { color: var(--ink-2); font: 700 13px/1.4 var(--sans); letter-spacing: 0; text-transform: none; }
+    .seg-opts { background: #f8fafc; border-color: #bdcbd9; border-radius: 3px; }
+    .seg span { border-radius: 2px; }
+    .seg input:checked + span { background: #005b96; color: #fff; }
+    .demo { background: var(--surface); border-color: var(--rule); border-radius: 3px; padding: 22px; }
+    .out { border-top-color: var(--rule-soft); }
+    .out-value { color: #174e79; }
+    .age-col.is-in .age-bar { background: #0063a6; }
+    .age-bar { background: #c5d4e0; border-radius: 2px 2px 0 0; }
+    .cutoff span { background: #003b71; }
+    .card { border-radius: 4px; box-shadow: none; rotate: 0deg !important; }
+    .card:nth-child(1), .card:nth-child(3) { rotate: 0deg !important; }
+    .val, .chip { border-radius: 3px; background: #f8fafc; }
+    .rev-row input { background: #fff; border-radius: 3px; }
+    .rev-out { background: #eef3f7; border-radius: 3px; }
+    .tbl caption, .trace caption, .attr-table thead th { font: 700 13px var(--sans); letter-spacing: 0; text-transform: none; }
+    .tbl th, .trace th { font: 700 13px var(--sans); background: #edf3f8; }
+    .tbl tr.is-linked td { background: #e3f1fb; }
+    .chart-panel { border-color: var(--rule); border-radius: 3px; background: #fff; }
+    .chart-title { font-weight: 700; }
+    .legend button, .step { border-radius: 3px; }
+    .legend button[aria-pressed="true"] { background: #e4f0f9; border-color: #8db8d9; }
+    .step { background: #f3f6fa; }
+    li[data-state="done"] .step { border-color: #b7d3c2; }
+    li[data-state="skipped"] .step::after { content: 'demo'; }
+    .steps li::before { color: #005b96; }
+    .colophon { color: var(--ink-3); padding-bottom: 12px; }
+    :focus-visible { outline: 3px solid #007ac3; outline-offset: 3px; }
+    @media (max-width: 980px) {
+      .site-banner-inner { padding: 12px 16px; }
+      .page { display: block; padding: 0 16px; }
+      .rail { top: 0; margin: 0 -16px; height: auto; padding: 0; background: #fff; border-bottom: 1px solid var(--rule); }
+      .rail ol { display: flex; padding: 0 10px; }
+      .rail a { border-left: 0; border-bottom: 3px solid transparent; margin: 0; padding: 13px 10px; }
+      .rail a[aria-current="true"] { border-bottom-color: var(--accent); border-left-color: transparent; }
+      main { max-width: none; padding-top: 30px; }
+      .q { scroll-margin-top: 70px; }
+    }
+    @media (max-width: 560px) {
+      .site-banner-title { font-size: 15px; }
+      .site-banner-note { font-size: 12px; }
+      .masthead { margin-bottom: 36px; }
+      .q { margin-bottom: 44px; }
+      .demo { padding: 14px; }
+      h1 { font-size: 1.9rem; }
+      .q h2 { font-size: 1.5rem; }
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- Stripe fills for the Set cards in question 2 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <pattern id="stripes-red" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="1.6" height="4" fill="#c0392b"/></pattern>
+    <pattern id="stripes-green" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="1.6" height="4" fill="#2f8a46"/></pattern>
+    <pattern id="stripes-purple" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="1.6" height="4" fill="#6c3a9c"/></pattern>
+  </defs>
+</svg>
+
+<div class="site-banner">
+  <div class="site-banner-inner">
+    <span class="site-banner-title">Web Developer Performance Task</span>
+    <span class="site-banner-note">Independent practice submission</span>
+  </div>
+</div>
+
+<div class="page">
+  <nav class="rail" aria-label="Questions">
+    <p class="rail-title">On this page</p>
+    <ol>
+      <li><a href="#q1"><span class="n">01</span>Filter by age</a></li>
+      <li><a href="#q2"><span class="n">02</span>Set of Cards</a></li>
+      <li><a href="#q3"><span class="n">03</span>Reverse a number</a></li>
+      <li><a href="#q4"><span class="n">04</span>Students and advisors</a></li>
+      <li><a href="#q5a"><span class="n">5a</span>Credit accumulation</a></li>
+      <li><a href="#q5b"><span class="n">5b</span>Dynamic charts</a></li>
+    </ol>
+    <p class="rail-foot">Five technical questions<br>with interactive examples</p>
+  </nav>
+
+  <main>
+    <header class="masthead">
+      <p class="eyebrow">Technical assessment | Questions 1–5(b)</p>
+      <h1>Web Developer Assessment Responses</h1>
+      <p class="lede">This page presents responses to five technical questions covering JavaScript, SQL, and data visualization. Each section includes the proposed code and an example that can be reviewed in the browser.</p>
+    </header>
+
+    <!-- ───────────────────────── Question 1 ───────────────────────── -->
+    <section class="q" id="q1" aria-labelledby="q1-title">
+      <p class="q-meta"><span class="num">Question 01</span><span>JavaScript</span></p>
+      <h2 id="q1-title">Filter People by Age</h2>
+      <div class="brief"><p>Given an array of people, return only the names of people whose age is over 30.</p></div>
+
+      <figure class="listing" data-source="script-q1" data-lang="js" data-file="question-1.js"></figure>
+
+      <div class="demo">
+        <div class="range-row">
+          <label for="q1-age" class="field-label">Older than</label>
+          <input type="range" id="q1-age" min="20" max="56" step="1" value="30">
+          <output id="q1-age-out" class="range-out" for="q1-age">30</output>
+          <button type="button" class="btn btn-ghost btn-tiny" id="q1-reset" hidden>Reset to 30</button>
+        </div>
+        <div class="ages" id="q1-plot" aria-hidden="true"></div>
+        <div class="age-names" id="q1-names" aria-hidden="true"></div>
+        <p class="aside" id="q1-note" hidden></p>
+        <div class="out">
+          <code class="out-call" id="q1-call">getNamesOlderThan(people)</code>
+          <span class="out-arrow" aria-hidden="true">→</span>
+          <output class="out-value" id="result-q1" aria-live="polite"></output>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Question 2 ───────────────────────── -->
+    <section class="q" id="q2" aria-labelledby="q2-title">
+      <p class="q-meta"><span class="num">Question 02</span><span>JavaScript</span></p>
+      <h2 id="q2-title">Validate a Set of Cards</h2>
+      <div class="brief"><p>Three cards make a valid Set when, for each attribute (shape, color, fill and number), the three values are either all the same or all different.</p></div>
+
+      <figure class="listing" data-source="script-q2" data-lang="js" data-file="question-2.js"></figure>
+
+      <div class="demo">
+        <div class="cards" id="q2-cards" aria-hidden="true"></div>
+        <div class="scroll-x">
+          <table class="attr-table" id="q2-table">
+            <caption class="aside" style="caption-side: bottom; text-align: left;">Select an attribute value to change a card. The validation result updates automatically.</caption>
+            <thead><tr><th scope="col">Attribute</th><th scope="col">Card 1</th><th scope="col">Card 2</th><th scope="col">Card 3</th><th scope="col">Check</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="out">
+          <code class="out-call">isSet(...cards)</code>
+          <span class="out-arrow" aria-hidden="true">→</span>
+          <output class="out-value" id="result-q2" aria-live="polite"></output>
+          <span class="verdict-text" id="q2-why"></span>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn" id="q2-deal">Generate Cards</button>
+          <button type="button" class="btn btn-ghost" id="q2-sample" hidden>Reset to Sample</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Question 3 ───────────────────────── -->
+    <section class="q" id="q3" aria-labelledby="q3-title">
+      <p class="q-meta"><span class="num">Question 03</span><span>JavaScript</span></p>
+      <h2 id="q3-title">Reverse a Number Using Arithmetic</h2>
+      <div class="brief"><p>Reverse an integer using arithmetic only (remainder and division), without converting it into a string or an array of characters.</p></div>
+
+      <figure class="listing" data-source="script-q3" data-lang="js" data-file="question-3.js"></figure>
+
+      <div class="demo">
+        <label for="number-input" class="field-label">Integer to reverse</label>
+        <div class="rev-row">
+          <input id="number-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" value="1234" aria-describedby="input-error q3-examples">
+          <span class="rev-arrow" aria-hidden="true">→</span>
+          <output id="result-q3" class="rev-out" for="number-input" aria-live="polite"></output>
+        </div>
+        <p class="field-error" id="input-error" role="alert" hidden></p>
+        <p class="examples" id="q3-examples">Try
+          <button type="button" class="chip" data-value="1234">1234</button>
+          <button type="button" class="chip" data-value="-907">-907</button>
+          <button type="button" class="chip" data-value="1200">1200</button>
+          <button type="button" class="chip" data-value="900719925474099312345">21 digits</button>
+        </p>
+        <p class="aside" id="q3-zero-note" hidden></p>
+        <div class="scroll-x">
+          <table class="trace" id="q3-trace">
+            <caption>Inside the loop</caption>
+            <thead><tr><th scope="col">Pass</th><th scope="col">rest</th><th scope="col">rest % 10n</th><th scope="col">reversed</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="aside" id="q3-trace-note"></p>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Question 4 ───────────────────────── -->
+    <section class="q" id="q4" aria-labelledby="q4-title">
+      <p class="q-meta"><span class="num">Question 04</span><span>SQL</span></p>
+      <h2 id="q4-title">List Students and Advisors</h2>
+      <div class="brief"><p>Write a SQL query that lists all students with their full names and their advisor's full name. Keep students who have no assigned advisor.</p></div>
+
+      <figure class="listing" data-source="sql-q4" data-lang="sql" data-file="question-4.sql"></figure>
+
+      <div class="demo" id="q4-demo">
+        <div class="demo-head">
+          <fieldset class="seg">
+            <legend>Join type</legend>
+            <div class="seg-opts">
+              <label><input type="radio" name="q4-join" value="left" checked><span>LEFT JOIN</span></label>
+              <label><input type="radio" name="q4-join" value="inner"><span>INNER JOIN</span></label>
+            </div>
+          </fieldset>
+          <p class="aside">Point at any row (or tab through the result) to see what it was joined to.</p>
+        </div>
+
+        <div class="join-tables">
+          <div class="scroll-x">
+            <table class="tbl" id="q4-students">
+              <caption>Students</caption>
+              <thead><tr><th scope="col">student_id</th><th scope="col">first_name</th><th scope="col">last_name</th><th scope="col">advisor_id</th></tr></thead>
+              <tbody>
+              <tr><td class="id">1</td><td>Jason</td><td>Long</td><td class="id">2</td></tr>
+              <tr><td class="id">2</td><td>David</td><td>Wilson</td><td class="null">NULL</td></tr>
+              <tr><td class="id">3</td><td>Sonia</td><td>Hemmings</td><td class="id">3</td></tr>
+              <tr><td class="id">4</td><td>Gordon</td><td>Hodges</td><td class="id">1</td></tr>
+              <tr><td class="id">5</td><td>Eric</td><td>Ogden</td><td class="id">2</td></tr>
+              <tr><td class="id">6</td><td>Katherine</td><td>Vaughan</td><td class="id">3</td></tr>
+              <tr><td class="id">7</td><td>Lauren</td><td>King</td><td class="id">4</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="scroll-x">
+            <table class="tbl" id="q4-advisors">
+              <caption>Advisors</caption>
+              <thead><tr><th scope="col">advisor_id</th><th scope="col">first_name</th><th scope="col">last_name</th></tr></thead>
+              <tbody>
+              <tr><td class="id">1</td><td>James</td><td>Francis</td></tr>
+              <tr><td class="id">2</td><td>Amy</td><td>Cheng</td></tr>
+              <tr><td class="id">3</td><td>Lamar</td><td>Alexander</td></tr>
+              <tr><td class="id">4</td><td>Anita</td><td>Woods</td></tr>
+              <tr><td class="id">5</td><td>Faith</td><td>Lambert</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="join-result">
+          <div class="scroll-x">
+            <table class="tbl tbl-result" id="result-q4">
+              <caption>Result <span class="count" id="q4-count"></span></caption>
+              <thead><tr><th scope="col">student_id</th><th scope="col">student_name</th><th scope="col">advisor_name</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="aside" id="q4-explain"></p>
+        </div>
+        <p class="fine">The sample result is calculated in the browser. This demonstration does not require a database connection.</p>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── Question 5(a) ───────────────────────── -->
+    <section class="q" id="q5a" aria-labelledby="q5a-title">
+      <p class="q-meta"><span class="num">Question 5(a)</span><span>Chart.js</span></p>
+      <h2 id="q5a-title">Credit Accumulation Charts</h2>
+      <div class="brief"><p>Create two Chart.js bar charts showing credit accumulation for All Students and Students with Disabilities (SWD), using the School, City, District, and Executive Superintendent benchmarks from the 2019 sample.</p></div>
+
+      <div class="chart-tools">
+        <div class="legend" role="group" aria-label="Highlight a benchmark in both charts">
+          <button type="button" data-index="0" aria-pressed="false"><i class="swatch" style="--c: var(--c0)"></i>School</button>
+          <button type="button" data-index="1" aria-pressed="false"><i class="swatch" style="--c: var(--c1)"></i>City</button>
+          <button type="button" data-index="2" aria-pressed="false"><i class="swatch" style="--c: var(--c2)"></i>District</button>
+          <button type="button" data-index="3" aria-pressed="false"><i class="swatch" style="--c: var(--c3)"></i>Exec Supt</button>
+        </div>
+        <fieldset class="seg" id="q5-palette">
+          <legend>Bar colors</legend>
+          <div class="seg-opts">
+            <label><input type="radio" name="q5-palette" value="refined" checked><span>Accessible colors</span></label>
+            <label><input type="radio" name="q5-palette" value="brief"><span>Original colors</span></label>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="charts-grid">
+        <figure class="chart-panel">
+          <figcaption class="chart-title">Credit Accumulation - All Students - 99X999 - 2019</figcaption>
+          <div class="chart-canvas-wrap"><canvas id="allStudentsChart" role="img" aria-label="All Students: School 49, City 41.5, District 14.5, Exec Supt 12"></canvas></div>
+        </figure>
+        <figure class="chart-panel">
+          <figcaption class="chart-title">Credit Accumulation - SWD - 99X999 - 2019</figcaption>
+          <div class="chart-canvas-wrap"><canvas id="swdChart" role="img" aria-label="SWD: School 40, City 49, District 44, Exec Supt 32.5"></canvas></div>
+        </figure>
+      </div>
+      <p id="q5-chart-alert" class="chart-alert" role="alert" hidden>Chart.js didn't load (it comes from a CDN), so the charts can't be drawn. The values are 49, 41.5, 14.5 and 12 for All Students, and 40, 49, 44 and 32.5 for SWD.</p>
+      <p class="aside">Both charts use a 0–50 scale for direct comparison. Hover over a bar or benchmark label to highlight its values in both charts. Select a benchmark label to keep it highlighted.</p>
+      <p class="aside">The accessible color option increases contrast between categories. The original color option matches the supplied example.</p>
+
+      <figure class="listing" data-source="script-q5" data-lang="js" data-file="question-5a.js"></figure>
+    </section>
+
+    <!-- ───────────────────────── Question 5(b) ───────────────────────── -->
+    <section class="q" id="q5b" aria-labelledby="q5b-title">
+      <p class="q-meta"><span class="num">Question 5(b)</span><span>Chart.js · Node · PostgreSQL</span></p>
+      <h2 id="q5b-title">Updating Charts with Server Data</h2>
+      <div class="brief"><p>Allow users to select a school and reporting year. Retrieve the corresponding data from an API and update both charts without reloading the page.</p></div>
+
+      <div class="demo">
+        <form class="filters" id="q5b-filters">
+          <fieldset class="seg">
+            <legend>School</legend>
+            <div class="seg-opts">
+              <label><input type="radio" name="schoolId" value="99X999" checked><span>99X999</span></label>
+              <label><input type="radio" name="schoolId" value="88X888"><span>88X888</span></label>
+            </div>
+          </fieldset>
+          <fieldset class="seg">
+            <legend>Year</legend>
+            <div class="seg-opts">
+              <label><input type="radio" name="year" value="2019" checked><span>2019</span></label>
+              <label><input type="radio" name="year" value="2020"><span>2020</span></label>
+            </div>
+          </fieldset>
+          <fieldset class="seg">
+            <legend>Data from</legend>
+            <div class="seg-opts">
+              <label><input type="radio" name="source" value="demo" checked><span>Demo data</span></label>
+              <label><input type="radio" name="source" value="api"><span>Live API</span></label>
+            </div>
+          </fieldset>
+          <button type="submit" class="btn btn-ghost" id="q5b-button">Reload</button>
+        </form>
+
+        <ol class="pipeline" id="q5b-pipeline" aria-label="What happens on each change">
+          <li data-state="idle"><span class="step">Filter change</span></li>
+          <li data-state="idle"><span class="step"><code>fetch()</code></span></li>
+          <li data-state="idle"><span class="step">Express route</span></li>
+          <li data-state="idle"><span class="step">PostgreSQL</span></li>
+          <li data-state="idle"><span class="step"><code>chart.update()</code></span></li>
+        </ol>
+        <p class="request-line"><b>GET</b><span id="q5b-url">/api/credit-accumulation?schoolId=99X999&amp;year=2019</span></p>
+
+        <div id="q5b-status" class="status" role="status" aria-live="polite">Loading…</div>
+        <div class="chart-tools" style="margin: 0 0 12px;">
+          <div class="legend" role="group" aria-label="Highlight a benchmark in both charts">
+            <button type="button" data-index="0" aria-pressed="false"><i class="swatch" style="--c: var(--c0)"></i>School</button>
+            <button type="button" data-index="1" aria-pressed="false"><i class="swatch" style="--c: var(--c1)"></i>City</button>
+            <button type="button" data-index="2" aria-pressed="false"><i class="swatch" style="--c: var(--c2)"></i>District</button>
+            <button type="button" data-index="3" aria-pressed="false"><i class="swatch" style="--c: var(--c3)"></i>Exec Supt</button>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <figure class="chart-panel">
+            <figcaption class="chart-title" id="q5b-allStudents-title">Credit Accumulation - All Students - 99X999 - 2019</figcaption>
+            <div class="chart-canvas-wrap"><canvas id="q5b-allStudents-chart" role="img" aria-label="Credit accumulation for all students"></canvas></div>
+          </figure>
+          <figure class="chart-panel">
+            <figcaption class="chart-title" id="q5b-swd-title">Credit Accumulation - SWD - 99X999 - 2019</figcaption>
+            <div class="chart-canvas-wrap"><canvas id="q5b-swd-chart" role="img" aria-label="Credit accumulation for students with disabilities"></canvas></div>
+          </figure>
+        </div>
+      </div>
+      <p class="aside"><strong>Data note:</strong> The 2019 figures for school 99X999 come from the assessment prompt. Other school and year combinations use illustrative data only. The Live API option requires the included <code>server.js</code> application and its database. If the API is unavailable, an error message appears and the previous chart values are dimmed.</p>
+
+      <h3><span class="part">i.</span>What the API returns</h3>
+      <p>Each API response contains one school and year, four benchmark labels, and separate values for All Students and SWD. The JSON example below updates when the selected filters change.</p>
+      <figure class="listing" data-source="source-q5b-json" data-lang="json" data-file="api-response.json" id="q5b-json"></figure>
+
+      <p>The database stores one record per school, year, student group, and benchmark. A composite primary key prevents duplicate records for the same combination.</p>
+      <figure class="listing" data-source="source-q5b-schema" data-lang="sql" data-file="schema.sql"></figure>
+
+      <h3><span class="part">ii.</span>Front-end changes</h3>
+      <ol class="steps">
+        <li>The three filters live in one <code>&lt;form&gt;</code>. Any change loads new data; <b>Reload</b> repeats the last request.</li>
+        <li><code>fetch()</code> the endpoint, check the JSON has two arrays of four finite numbers, then swap each chart's data and call <code>chart.update()</code>. Create each Chart.js instance once and update its existing dataset when new data arrives.</li>
+        <li>Assign an identifier to each request. Ignore responses from earlier requests if users change their selection before the request finishes.</li>
+        <li>Loading and errors are reported in a <code>role="status"</code> line. On an error the previous bars are greyed out, so they can't pass for the new selection.</li>
+      </ol>
+      <figure class="listing" data-source="script-q5b" data-lang="js" data-file="question-5b-frontend.js"></figure>
+
+      <h3><span class="part">iii.</span>Back-end steps</h3>
+      <ol class="steps">
+        <li>Create <code>credit_accumulation</code> in PostgreSQL (<code>schema.sql</code> above) and load the figures.</li>
+        <li>Add an Express app with a <code>pg</code> connection pool and one route: <code>GET /api/credit-accumulation?schoolId=…&amp;year=…</code>.</li>
+        <li>Check <code>schoolId</code> and <code>year</code> before going near the database, and send them as bound parameters (<code>$1</code>, <code>$2</code>). The SQL string is never built from user input.</li>
+        <li>Pivot the rows into the two four-value arrays the charts expect. Answer 404 when the school and year have no rows, and 422 when some benchmarks are missing.</li>
+        <li>Serve this page from the same Express app. The browser then calls the API on its own origin, and no CORS setup is needed.</li>
+      </ol>
+      <figure class="listing" data-source="source-q5b-server" data-lang="js" data-file="server.js"></figure>
+
+      <p>To run it locally (Node 18+ and PostgreSQL installed):</p>
+      <figure class="listing" data-source="source-q5b-run" data-lang="sh" data-file="terminal"></figure>
+    </section>
+
+    <footer class="colophon">
+      <p>Independent technical demonstration. This is not an official NYC Public Schools website or application. The page uses HTML, CSS, and JavaScript, with Chart.js 4.5.1 loaded from jsDelivr. If Chart.js is unavailable, the chart sections display an explanatory message.</p>
+    </footer>
+  </main>
+</div>
+
+<!-- SQL is stored as plain text so it can be shown, not run. -->
+<script type="text/plain" id="sql-q4">
+  SELECT
+    s.student_id,
+    CONCAT(s.first_name, ' ', s.last_name) AS student_name,
+    CONCAT(a.first_name, ' ', a.last_name) AS advisor_name
+  FROM Students AS s
+  LEFT JOIN Advisors AS a
+    ON s.advisor_id = a.advisor_id
+  ORDER BY s.student_id;
+</script>
+
+<script id="script-q1">
+  const people = [
+    { name: 'Jon', age: 31 },
+    { name: 'Ned', age: 53 },
+    { name: 'Brandon', age: 25 },
+    { name: 'Arya', age: 27 },
+    { name: 'Sansa', age: 30 },
+    { name: 'Robb', age: 32 }
+  ];
+
+  function getNamesOlderThan(list, minAge = 30) {
+    return list
+            .filter(person => person.age > minAge)
+            .map(person => person.name);
+  }
+
+  // getNamesOlderThan(people) → ["Jon", "Ned", "Robb"]
+</script>
+
+<script id="script-q2">
+  const sampleCards = [
+    { shape: 'squiggle', color: 'green', fill: 'solid', number: 3 },
+    { shape: 'oval', color: 'green', fill: 'empty', number: 3 },
+    { shape: 'diamond', color: 'green', fill: 'striped', number: 3 }
+  ];
+
+  function isSet(card1, card2, card3) {
+    const cards = [card1, card2, card3];
+
+    return ['shape', 'color', 'fill', 'number'].every(attribute => {
+      // 1 distinct value means all the same, 3 means all different.
+      // 2 means two cards match and one doesn't, which breaks the set.
+      const distinct = new Set(cards.map(card => card[attribute])).size;
+      return distinct === 1 || distinct === 3;
+    });
+  }
+
+  // isSet(...sampleCards) → true
+</script>
+
+<script id="script-q3">
+  // BigInt keeps long inputs exact. The digits are peeled off with % and /,
+  // so the number never becomes a string or an array.
+  function reverseNumber(number) {
+    const sign = number < 0n ? -1n : 1n;
+    let rest = number < 0n ? -number : number;
+    let reversed = 0n;
+
+    while (rest > 0n) {
+      const lastDigit = rest % 10n;
+      reversed = reversed * 10n + lastDigit;
+      rest = rest / 10n; // BigInt division drops the remainder
+    }
+
+    return reversed * sign;
+  }
+
+  // reverseNumber(1234n) → 4321n
+  // reverseNumber(-907n) → -709n
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+<script id="script-q5">
+  // Question 5(a): the two credit accumulation bar charts.
+  const creditCategories = ['School', 'City', 'District', 'Exec Supt'];
+  const creditAccumulation = {
+    allStudents: [49.0, 41.5, 14.5, 12.0],
+    swd: [40.0, 49.0, 44.0, 32.5]
+  };
+  const creditPalettes = {
+    // The brief's four hues, with red and green pulled apart in lightness
+    // so they stay distinguishable for color-blind readers.
+    refined: ['#3451c6', '#4fa13c', '#a3302b', '#8a4fb8'],
+    // The exact colors from the brief's image.
+    brief: ['#1515ff', '#058d05', '#a82828', '#85008e']
+  };
+
+  let creditColors = creditPalettes.refined;
+  const creditCharts = [];
+  const highlighted = new WeakMap(); // chart -> index of the highlighted bar
+  const animateCharts = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // While one benchmark is highlighted, the other bars fade back.
+  function barColor({ chart, dataIndex }) {
+    const focus = highlighted.get(chart);
+    const color = creditColors[dataIndex];
+    return focus === undefined || focus === dataIndex ? color : color + '33';
+  }
+
+  // Writes each value above its bar. The number is read back from the bar's
+  // current height, so it counts along while the bar animates.
+  const valueLabels = {
+    id: 'valueLabels',
+    afterDatasetsDraw(chart) {
+      const { ctx, scales } = chart;
+      const values = chart.data.datasets[0].data;
+      const focus = highlighted.get(chart);
+      ctx.save();
+      ctx.font = "500 12px 'IBM Plex Mono', monospace";
+      ctx.fillStyle = '#1f1c17';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      chart.getDatasetMeta(0).data.forEach((bar, i) => {
+        const current = scales.y.getValueForPixel(bar.y);
+        const value = Math.abs(current - values[i]) < 0.05 ? values[i] : current;
+        ctx.globalAlpha = focus === undefined || focus === i ? 1 : 0.35;
+        ctx.fillText(value.toFixed(1), bar.x, bar.y - 6);
+      });
+      ctx.restore();
+    }
+  };
+
+  // Highlight one benchmark in a group of charts (undefined clears it).
+  function highlightBenchmark(charts, index) {
+    const active = index === undefined ? [] : [{ datasetIndex: 0, index }];
+    for (const chart of charts) {
+      if (highlighted.get(chart) === index) continue;
+      if (index === undefined) highlighted.delete(chart);
+      else highlighted.set(chart, index);
+      chart.setActiveElements(active);
+      chart.tooltip.setActiveElements(active, { x: 0, y: 0 });
+      chart.update('none');
+    }
+  }
+
+  // Charts that sit side by side are linked: pointing at one shows both.
+  function linkedCharts(chart) {
+    const group = chart.canvas.closest('.charts-grid');
+    return creditCharts.filter(other => other.canvas.closest('.charts-grid') === group);
+  }
+
+  function createCreditChart(canvasId, values) {
+    const chart = new Chart(document.getElementById(canvasId), {
+      type: 'bar',
+      data: {
+        labels: creditCategories,
+        datasets: [{
+          data: values,
+          backgroundColor: barColor,
+          hoverBackgroundColor: barColor,
+          borderRadius: 4, // rounds the tops; the baseline end stays square
+          maxBarThickness: 30,
+          categoryPercentage: 0.7,
+          barPercentage: 0.85
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: animateCharts && { duration: 700, easing: 'easeOutCubic' },
+        layout: { padding: { top: 24 } },
+        interaction: { mode: 'index', intersect: false },
+        onHover: (event, elements) =>
+                highlightBenchmark(linkedCharts(chart), elements[0]?.index),
+        plugins: {
+          legend: { display: false }, // the legend is HTML, above the charts
+          tooltip: {
+            position: 'besideBar',
+            yAlign: 'center',
+            caretPadding: 18,
+            backgroundColor: '#1f1c17',
+            padding: 10,
+            cornerRadius: 4,
+            boxPadding: 4,
+            callbacks: { label: context => ` ${context.parsed.y.toFixed(1)}` }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            border: { color: '#8f8778' },
+            ticks: { color: '#48433a' }
+          },
+          y: {
+            min: 0,
+            max: 50,
+            ticks: { stepSize: 10, font: { family: "'IBM Plex Mono', monospace", size: 11 } },
+            grid: { color: '#ebe4d6' },
+            border: { display: false }
+          }
+        }
+      },
+      plugins: [valueLabels]
+    });
+
+    chart.canvas.addEventListener('mouseleave', () =>
+            highlightBenchmark(linkedCharts(chart), undefined));
+    creditCharts.push(chart);
+    return chart;
+  }
+
+  function setCreditPalette(name) {
+    creditColors = creditPalettes[name];
+    creditCharts.forEach(chart => chart.update());
+  }
+
+  if (typeof Chart !== 'undefined') {
+    // Tooltips sit beside the middle of the bar, clear of the value on top.
+    Chart.Tooltip.positioners.besideBar = items => items.length > 0 && {
+      x: items[0].element.x,
+      y: (items[0].element.y + items[0].element.base) / 2
+    };
+    Chart.defaults.font.family = "'IBM Plex Sans', system-ui, sans-serif";
+    Chart.defaults.color = '#6b6457';
+    createCreditChart('allStudentsChart', creditAccumulation.allStudents);
+    createCreditChart('swdChart', creditAccumulation.swd);
+  } else {
+    document.getElementById('q5-chart-alert').hidden = false;
+  }
+</script>
+
+<!-- Question 5(b) back-end files, kept as plain text for the listings. -->
+<script type="text/plain" id="source-q5b-json">
+  {
+    "schoolId": "99X999",
+    "year": 2019,
+    "categories": ["School", "City", "District", "Exec Supt"],
+    "series": {
+      "allStudents": [49, 41.5, 14.5, 12],
+      "swd": [40, 49, 44, 32.5]
+    }
+  }
+</script>
+<script type="text/plain" id="source-q5b-schema">
+  -- One row per school, year, cohort and benchmark.
+  CREATE TABLE IF NOT EXISTS credit_accumulation (
+    school_id     VARCHAR(20) NOT NULL,
+    academic_year INTEGER     NOT NULL,
+    cohort        VARCHAR(20) NOT NULL CHECK (cohort IN ('allStudents', 'swd')),
+    benchmark     VARCHAR(20) NOT NULL
+                  CHECK (benchmark IN ('School', 'City', 'District', 'Exec Supt')),
+    value         NUMERIC(8,2) NOT NULL CHECK (value >= 0),
+    PRIMARY KEY (school_id, academic_year, cohort, benchmark)
+  );
+
+  -- 99X999 / 2019 comes from the brief's image.
+  -- Every other school and year below is made-up demo data.
+  INSERT INTO credit_accumulation
+    (school_id, academic_year, cohort, benchmark, value)
+  VALUES
+    ('99X999', 2019, 'allStudents', 'School', 49.0),
+    ('99X999', 2019, 'allStudents', 'City', 41.5),
+    ('99X999', 2019, 'allStudents', 'District', 14.5),
+    ('99X999', 2019, 'allStudents', 'Exec Supt', 12.0),
+    ('99X999', 2019, 'swd', 'School', 40.0),
+    ('99X999', 2019, 'swd', 'City', 49.0),
+    ('99X999', 2019, 'swd', 'District', 44.0),
+    ('99X999', 2019, 'swd', 'Exec Supt', 32.5),
+    ('99X999', 2020, 'allStudents', 'School', 46.0),
+    ('99X999', 2020, 'allStudents', 'City', 43.0),
+    ('99X999', 2020, 'allStudents', 'District', 19.0),
+    ('99X999', 2020, 'allStudents', 'Exec Supt', 15.5),
+    ('99X999', 2020, 'swd', 'School', 42.0),
+    ('99X999', 2020, 'swd', 'City', 45.0),
+    ('99X999', 2020, 'swd', 'District', 39.0),
+    ('99X999', 2020, 'swd', 'Exec Supt', 30.0),
+    ('88X888', 2019, 'allStudents', 'School', 38.0),
+    ('88X888', 2019, 'allStudents', 'City', 37.0),
+    ('88X888', 2019, 'allStudents', 'District', 22.0),
+    ('88X888', 2019, 'allStudents', 'Exec Supt', 17.0),
+    ('88X888', 2019, 'swd', 'School', 35.0),
+    ('88X888', 2019, 'swd', 'City', 40.0),
+    ('88X888', 2019, 'swd', 'District', 31.0),
+    ('88X888', 2019, 'swd', 'Exec Supt', 26.0),
+    ('88X888', 2020, 'allStudents', 'School', 41.0),
+    ('88X888', 2020, 'allStudents', 'City', 39.0),
+    ('88X888', 2020, 'allStudents', 'District', 24.0),
+    ('88X888', 2020, 'allStudents', 'Exec Supt', 18.0),
+    ('88X888', 2020, 'swd', 'School', 37.0),
+    ('88X888', 2020, 'swd', 'City', 43.0),
+    ('88X888', 2020, 'swd', 'District', 34.0),
+    ('88X888', 2020, 'swd', 'Exec Supt', 28.0)
+  ON CONFLICT (school_id, academic_year, cohort, benchmark)
+  DO UPDATE SET value = EXCLUDED.value;
+</script>
+<script type="text/plain" id="source-q5b-server">
+  // Express + PostgreSQL API behind the 5(b) charts.
+  // npm install express pg, and set DATABASE_URL before starting.
+  const express = require('express');
+  const { Pool } = require('pg');
+  const path = require('node:path');
+
+  const app = express();
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const categories = ['School', 'City', 'District', 'Exec Supt'];
+  const cohorts = ['allStudents', 'swd'];
+
+  // Serve the page too, so the browser calls the API on the same origin.
+  app.use(express.static(path.join(__dirname, 'public')));
+
+  app.get('/api/credit-accumulation', async (req, res, next) => {
+    const { schoolId, year } = req.query;
+
+    // Reject bad input before it gets anywhere near the database.
+    if (typeof schoolId !== 'string' || !/^[A-Za-z0-9]{1,20}$/.test(schoolId) ||
+        typeof year !== 'string' || !/^\d{4}$/.test(year) ||
+        Number(year) < 2000 || Number(year) > 2100) {
+      return res.status(400).json({ error: 'Invalid schoolId or year' });
+    }
+
+    try {
+      // $1 and $2 are bound parameters, never pasted into the SQL text.
+      const { rows } = await pool.query(
+        `SELECT cohort, benchmark, value::float8 AS value
+           FROM credit_accumulation
+          WHERE school_id = $1 AND academic_year = $2`,
+        [schoolId, Number(year)]
+      );
+      if (rows.length === 0) {
+        return res.status(404).json({ error: `No data for ${schoolId} in ${year}` });
+      }
+
+      // Pivot the rows into one four-value array per cohort.
+      const series = {};
+      for (const cohort of cohorts) {
+        series[cohort] = categories.map(benchmark =>
+          rows.find(row => row.cohort === cohort && row.benchmark === benchmark)?.value ?? null);
+      }
+      if (Object.values(series).flat().includes(null)) {
+        return res.status(422).json({ error: 'Some benchmarks are missing for this school and year' });
+      }
+
+      res.json({ schoolId, year: Number(year), categories, series });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.use((error, req, res, next) => {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  });
+
+  const port = Number(process.env.PORT) || 3000;
+  app.listen(port, () => console.log(`Listening on http://localhost:${port}`));
+</script>
+<script type="text/plain" id="source-q5b-run">
+  # In a new folder, next to server.js and schema.sql
+  npm init -y
+  npm install express pg
+  mkdir public && cp results.html public/index.html
+
+  createdb credits
+  export DATABASE_URL=postgres://localhost/credits
+  psql "$DATABASE_URL" -f schema.sql
+
+  node server.js   # open http://localhost:3000 and choose "Live API"
+</script>
+
+<script id="script-q5b">
+  // Question 5(b): filters -> fetch() -> check the JSON -> chart.update().
+  // "Demo data" is answered from this object, so the page works without a server.
+  const demoResponses = {
+    '99X999-2019': { allStudents: [49, 41.5, 14.5, 12], swd: [40, 49, 44, 32.5] }, // the brief
+    '99X999-2020': { allStudents: [46, 43, 19, 15.5], swd: [42, 45, 39, 30] },      // made up
+    '88X888-2019': { allStudents: [38, 37, 22, 17], swd: [35, 40, 31, 26] },         // made up
+    '88X888-2020': { allStudents: [41, 39, 24, 18], swd: [37, 43, 34, 28] }          // made up
+  };
+  const cohortNames = { allStudents: 'All Students', swd: 'SWD' };
+
+  const filtersForm = document.getElementById('q5b-filters');
+  const statusLine = document.getElementById('q5b-status');
+  const dynamicCharts = {}; // cohort -> Chart, created on the first load
+  let latestRequest = 0;
+
+  async function fetchCreditData(schoolId, year, source) {
+    if (source === 'demo') {
+      await new Promise(resolve => setTimeout(resolve, 350)); // pretend network time
+      const series = demoResponses[`${schoolId}-${year}`];
+      if (!series) throw new Error(`No demo data for ${schoolId} in ${year}`);
+      return { schoolId, year, categories: [...creditCategories], series };
+    }
+
+    let response;
+    try {
+      response = await fetch(`/api/credit-accumulation?${new URLSearchParams({ schoolId, year })}`);
+    } catch {
+      throw new Error('Could not reach the API. Is server.js running and serving this page?');
+    }
+    const body = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(body?.error ?? `The API answered HTTP ${response.status}`);
+    return body;
+  }
+
+  function checkCreditData(data) {
+    const isSeries = values =>
+            Array.isArray(values) && values.length === 4 && values.every(Number.isFinite);
+    if (!Array.isArray(data?.categories) || data.categories.length !== 4 ||
+            !isSeries(data.series?.allStudents) || !isSeries(data.series?.swd)) {
+      throw new Error('The response is missing some chart values');
+    }
+    return data;
+  }
+
+  function showCohort(cohort, data) {
+    const values = data.series[cohort];
+    // Build each chart once (same setup as 5a), then only swap its data.
+    dynamicCharts[cohort] ??= createCreditChart(`q5b-${cohort}-chart`, values);
+    const chart = dynamicCharts[cohort];
+    chart.data.labels = data.categories;
+    chart.data.datasets[0].data = values;
+    chart.update(); // animates to the new values; the page never reloads
+
+    document.getElementById(`q5b-${cohort}-title`).textContent =
+            `Credit Accumulation - ${cohortNames[cohort]} - ${data.schoolId} - ${data.year}`;
+    chart.canvas.setAttribute('aria-label', `${cohortNames[cohort]}: ` +
+            data.categories.map((name, i) => `${name} ${values[i]}`).join(', '));
+  }
+
+  async function loadCreditCharts() {
+    const { schoolId, year, source } = Object.fromEntries(new FormData(filtersForm));
+    const request = ++latestRequest;
+    statusLine.dataset.state = 'loading';
+    statusLine.textContent = `Loading ${schoolId}, ${year}…`;
+
+    try {
+      const data = checkCreditData(await fetchCreditData(schoolId, Number(year), source));
+      if (request !== latestRequest) return; // a newer request has taken over
+      if (typeof Chart === 'undefined') throw new Error('Chart.js did not load from the CDN');
+
+      showCohort('allStudents', data);
+      showCohort('swd', data);
+
+      const origin = source === 'api' ? 'the API'
+              : schoolId === '99X999' && year === '2019' ? 'demo data (the figures in the brief)'
+                      : 'demo data (made-up figures)';
+      statusLine.dataset.state = 'ok';
+      statusLine.textContent = `Showing ${schoolId}, ${year} from ${origin}.`;
+    } catch (error) {
+      if (request !== latestRequest) return;
+      statusLine.dataset.state = 'error';
+      statusLine.textContent = error.message;
+    }
+  }
+
+  filtersForm.addEventListener('change', loadCreditCharts);
+  filtersForm.addEventListener('submit', event => {
+    event.preventDefault();
+    loadCreditCharts();
+  });
+  loadCreditCharts();
+</script>
+
+<!-- Page behavior: listings, navigation and the demos. Not part of any answer. -->
+<script>
+  (() => {
+    const $ = (selector, root = document) => root.querySelector(selector);
+    const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+    const flash = node => { node.classList.remove('flash'); void node.offsetWidth; node.classList.add('flash'); };
+
+    /* ── Listings: dedent, highlight, number the lines ─────────────────── */
+    const JS_KEYWORDS = new Set('async await break case catch class const continue default do else export extends finally for function if import in instanceof let new of return switch this throw try typeof var while'.split(' '));
+    const JS_LITERALS = new Set(['true', 'false', 'null', 'undefined', 'NaN']);
+    const JS_TYPES = new Set(['Array', 'BigInt', 'Chart', 'Error', 'FormData', 'JSON', 'Math', 'Number', 'Object', 'Promise', 'Set', 'URLSearchParams', 'WeakMap']);
+    const SQL_KEYWORDS = new Set('and as asc by check conflict create desc do excluded exists from group having if in inner insert integer into is join key left limit not null numeric on or order outer primary right select set table update values varchar where'.split(' '));
+    const RULES = {
+      js: [
+        ['space', /\s+/y],
+        ['com', /\/\/[^\n]*|\/\*[\s\S]*?\*\//y],
+        ['str', /'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`(?:\\[\s\S]|[^`\\])*`/y],
+        ['re', /\/(?![*/])(?:\\.|\[(?:\\.|[^\]\\\n])*\]|[^/\\\n[])+\/[dgimsuy]*/y],
+        ['num', /\d[\d_]*(?:\.\d+)?n?(?![\w$])/y],
+        ['word', /[A-Za-z_$][\w$]*/y],
+        ['p', /=>|\?\?=?|\?\.|[{}()[\];,.:?!<>=+\-*/%&|^~]/y]
+      ],
+      sql: [
+        ['space', /\s+/y],
+        ['com', /--[^\n]*/y],
+        ['str', /'(?:''|[^'])*'/y],
+        ['num', /\d+(?:\.\d+)?(?!\w)/y],
+        ['param', /\$\d+/y],
+        ['word', /[A-Za-z_]\w*/y],
+        ['p', /[(),.;*=<>:]/y]
+      ],
+      json: [
+        ['space', /\s+/y],
+        ['key', /"(?:\\.|[^"\\])*"(?=\s*:)/y],
+        ['str', /"(?:\\.|[^"\\])*"/y],
+        ['num', /-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/y],
+        ['lit', /true|false|null/y],
+        ['p', /[{}[\],:]/y]
+      ],
+      sh: [
+        ['space', /\s+/y],
+        ['com', /#[^\n]*/y],
+        ['str', /"(?:\\.|[^"\\])*"|'[^']*'/y],
+        ['param', /\$\{?\w+\}?/y],
+        ['word', /[^\s"'#$&|;]+/y],
+        ['p', /&&|\|\||[|;]/y]
+      ]
+    };
+
+    function classifyWord(word, lang, src, start, prev) {
+      const end = start + word.length;
+      if (lang === 'js') {
+        if (JS_KEYWORDS.has(word)) return 'kw';
+        if (JS_LITERALS.has(word)) return 'lit';
+        if (JS_TYPES.has(word)) return 'type';
+        if (prev?.text === 'function') return 'fn';
+        if (prev?.text !== '.' && /^\s*\(/.test(src.slice(end, end + 3))) return 'fn';
+        return 'plain';
+      }
+      if (lang === 'sql') {
+        if (SQL_KEYWORDS.has(word.toLowerCase())) return 'kw';
+        return src[end] === '(' ? 'fn' : 'plain';
+      }
+      if (lang === 'sh') {
+        return /(^|\n|&&)\s*$/.test(src.slice(Math.max(0, start - 4), start)) ? 'fn' : 'plain';
+      }
+      return 'plain';
+    }
+
+    function tokenize(src, lang) {
+      const rules = RULES[lang] || [];
+      const tokens = [];
+      let pos = 0;
+      let prev = null; // last token that wasn't whitespace or a comment
+      scan: while (pos < src.length) {
+        for (const [rule, re] of rules) {
+          re.lastIndex = pos;
+          const match = re.exec(src);
+          if (!match || !match[0]) continue;
+          const text = match[0];
+          if (rule === 're' && prev && (prev.rule === 'num' || prev.text === ')' || prev.text === ']' ||
+                  (prev.rule === 'word' && !JS_KEYWORDS.has(prev.text)))) continue; // that's division
+          const type = rule === 'word' ? classifyWord(text, lang, src, pos, prev) : rule;
+          tokens.push([type, text]);
+          if (rule !== 'space' && rule !== 'com') prev = { rule, text };
+          pos += text.length;
+          continue scan;
+        }
+        tokens.push(['plain', src[pos]]);
+        prev = { rule: 'p', text: src[pos] };
+        pos += 1;
+      }
+      return tokens;
+    }
+
+    const escapeHTML = text => text.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+    function highlight(src, lang) {
+      const lines = [[]];
+      for (const [type, text] of tokenize(src, lang)) {
+        text.split('\n').forEach((part, i) => {
+          if (i > 0) lines.push([]);
+          if (part) lines[lines.length - 1].push(type === 'plain' || type === 'space'
+                  ? escapeHTML(part)
+                  : `<span class="t-${type}">${escapeHTML(part)}</span>`);
+        });
+      }
+      return lines.map(parts => `<span class="ln">${parts.join('')}</span>`).join('\n');
+    }
+
+    function dedent(text) {
+      const lines = text.replace(/^(?:[ \t]*\n)+/, '').replace(/\s+$/, '').split('\n');
+      const indent = Math.min(...lines.filter(line => line.trim()).map(line => line.match(/^ */)[0].length));
+      return lines.map(line => line.slice(indent)).join('\n');
+    }
+
+    const listingText = new WeakMap();
+    const COLLAPSE_AFTER = 26;
+
+    function setListing(figure, text) {
+      listingText.set(figure, text);
+      const lineCount = text.split('\n').length;
+      const long = lineCount > COLLAPSE_AFTER;
+      const open = figure.classList.contains('is-open');
+      figure.innerHTML = `
+      <figcaption class="listing-bar">
+        <span class="file">${escapeHTML(figure.dataset.file)}</span>
+        ${figure.dataset.tag ? `<span class="tag">${escapeHTML(figure.dataset.tag)}</span>` : ''}
+        <span class="spacer"></span>
+        <span class="count">${lineCount} lines</span>
+        <button type="button" class="btn btn-ghost btn-tiny copy">Copy</button>
+      </figcaption>
+      <pre><code>${highlight(text, figure.dataset.lang)}</code></pre>
+      ${long ? `<button type="button" class="listing-more" aria-expanded="${open}">${open ? 'Show less' : `Show all ${lineCount} lines`}</button>` : ''}`;
+      figure.classList.toggle('is-collapsed', long && !open);
+    }
+
+    $$('.listing[data-source]').forEach(figure =>
+            setListing(figure, dedent(document.getElementById(figure.dataset.source).textContent)));
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const area = Object.assign(document.createElement('textarea'), { value: text });
+        area.style.cssText = 'position:fixed;opacity:0';
+        document.body.append(area);
+        area.select();
+        document.execCommand('copy');
+        area.remove();
+      }
+    }
+
+    document.addEventListener('click', async event => {
+      const copy = event.target.closest('.listing .copy');
+      if (copy) {
+        await copyText(listingText.get(copy.closest('.listing')));
+        copy.textContent = 'Copied';
+        setTimeout(() => { copy.textContent = 'Copy'; }, 1400);
+        return;
+      }
+      const more = event.target.closest('.listing-more');
+      if (more) {
+        const figure = more.closest('.listing');
+        const opening = figure.classList.contains('is-collapsed');
+        figure.classList.toggle('is-collapsed', !opening);
+        figure.classList.toggle('is-open', opening);
+        more.setAttribute('aria-expanded', String(opening));
+        more.textContent = opening ? 'Show less' : `Show all ${listingText.get(figure).split('\n').length} lines`;
+        if (!opening) figure.scrollIntoView({ block: 'nearest' });
+      }
+    });
+
+    /* ── Contents rail follows the scroll position ─────────────────────── */
+    const railList = $('.rail ol');
+    const railLinks = $$('.rail a');
+    const sections = railLinks.map(link => document.getElementById(link.hash.slice(1)));
+    const visible = new Set();
+    function setCurrent(id) {
+      railLinks.forEach(link => {
+        const current = link.hash === `#${id}`;
+        link.setAttribute('aria-current', String(current));
+        if (current && getComputedStyle(railList).display === 'flex') {
+          railList.scrollTo({ left: link.offsetLeft - 12, behavior: 'smooth' });
+        }
+      });
+    }
+    const spy = new IntersectionObserver(entries => {
+      entries.forEach(entry => (entry.isIntersecting ? visible.add(entry.target) : visible.delete(entry.target)));
+      const first = sections.find(section => visible.has(section));
+      if (first) setCurrent(first.id);
+    }, { rootMargin: '-25% 0px -65% 0px' });
+    sections.forEach(section => spy.observe(section));
+    setCurrent('q1');
+
+    /* ── Q1: cut-off slider over the ages ─────────────────────────────── */
+    {
+      const SCALE = 64;
+      const slider = $('#q1-age');
+      const plot = $('#q1-plot');
+      const namesRow = $('#q1-names');
+      const output = $('#result-q1');
+
+      const columns = people.map(person => {
+        const column = document.createElement('div');
+        column.className = 'age-col';
+        const bar = document.createElement('div');
+        bar.className = 'age-bar';
+        bar.style.height = `${(person.age / SCALE) * 100}%`;
+        const label = document.createElement('b');
+        label.textContent = person.age;
+        bar.append(label);
+        column.append(bar);
+        return column;
+      });
+      const cutoff = document.createElement('div');
+      cutoff.className = 'cutoff';
+      cutoff.append(document.createElement('span'));
+      plot.append(...columns, cutoff);
+
+      const names = people.map(person => {
+        const span = document.createElement('span');
+        span.textContent = person.name;
+        return span;
+      });
+      namesRow.append(...names);
+
+      function render() {
+        const minAge = Number(slider.value);
+        const result = getNamesOlderThan(people, minAge);
+        people.forEach((person, i) => {
+          columns[i].classList.toggle('is-in', person.age > minAge);
+          names[i].classList.toggle('is-in', person.age > minAge);
+        });
+        cutoff.style.bottom = `${(minAge / SCALE) * 100}%`;
+        cutoff.firstChild.textContent = `> ${minAge}`;
+        $('#q1-age-out').textContent = minAge;
+        $('#q1-call').textContent = minAge === 30 ? 'getNamesOlderThan(people)' : `getNamesOlderThan(people, ${minAge})`;
+        $('#q1-reset').hidden = minAge === 30;
+        output.textContent = JSON.stringify(result);
+        flash(output);
+
+        const exact = people.filter(person => person.age === minAge).map(person => person.name);
+        const note = $('#q1-note');
+        note.hidden = exact.length === 0;
+        note.textContent = `${exact.join(' and ')} ${exact.length > 1 ? 'are' : 'is'} exactly ${minAge}, which doesn't pass age > ${minAge}. The brief says "over 30", so the comparison is strict.`;
+      }
+      slider.addEventListener('input', render);
+      $('#q1-reset').addEventListener('click', () => { slider.value = 30; render(); slider.focus(); });
+      render();
+    }
+
+    /* ── Q2: three editable cards ─────────────────────────────────────── */
+    {
+      const OPTIONS = {
+        shape: ['squiggle', 'oval', 'diamond'],
+        color: ['red', 'green', 'purple'],
+        fill: ['solid', 'striped', 'empty'],
+        number: [1, 2, 3]
+      };
+      const INK = { red: '#c0392b', green: '#2f8a46', purple: '#6c3a9c' };
+      const SHAPES = {
+        diamond: 'M-30 0 L0 -12 L30 0 L0 12 Z',
+        oval: 'M-18 -12 H18 A12 12 0 0 1 18 12 H-18 A12 12 0 0 1 -18 -12 Z',
+        squiggle: 'M-29 7 C-33 -3 -25 -13 -14 -11 C-6 -9.5 0 -4 8 -7 C16 -10 22 -14 28 -9 C33 -4 30 7 20 10 C11 12.5 6 6 -2 8 C-10 10 -14 14 -22 13 C-25.5 12.5 -28 10 -29 7 Z'
+      };
+      const ATTRS = Object.keys(OPTIONS);
+      const sameCards = (a, b) => ATTRS.every(attr => a[attr] === b[attr]);
+      let cards = sampleCards.map(card => ({ ...card }));
+
+      const cardNodes = [0, 1, 2].map(() => {
+        const node = document.createElement('div');
+        node.className = 'card';
+        return node;
+      });
+      $('#q2-cards').append(...cardNodes);
+
+      const tbody = $('#q2-table tbody');
+      const rows = ATTRS.map(attr => {
+        const row = document.createElement('tr');
+        const head = document.createElement('th');
+        head.scope = 'row';
+        head.textContent = attr;
+        row.append(head);
+        const buttons = [0, 1, 2].map(cardIndex => {
+          const cell = document.createElement('td');
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'val';
+          button.addEventListener('click', () => {
+            const values = OPTIONS[attr];
+            const card = cards[cardIndex];
+            card[attr] = values[(values.indexOf(card[attr]) + 1) % values.length];
+            render([cardIndex]);
+          });
+          cell.append(button);
+          row.append(cell);
+          return button;
+        });
+        const check = document.createElement('td');
+        check.className = 'check';
+        row.append(check);
+        tbody.append(row);
+        return { row, buttons, check };
+      });
+
+      function drawCard(card) {
+        const ink = INK[card.color];
+        const fill = card.fill === 'solid' ? ink : card.fill === 'striped' ? `url(#stripes-${card.color})` : 'none';
+        const ys = { 1: [70], 2: [54, 86], 3: [38, 70, 102] }[card.number];
+        return `<svg viewBox="0 0 100 140">${ys.map(y =>
+                `<path d="${SHAPES[card.shape]}" transform="translate(50 ${y})" fill="${fill}" stroke="${ink}" stroke-width="2.2" stroke-linejoin="round"/>`).join('')}</svg>`;
+      }
+
+      function render(changed = [0, 1, 2]) {
+        cards.forEach((card, i) => {
+          cardNodes[i].innerHTML = drawCard(card);
+          if (changed.includes(i)) { cardNodes[i].classList.remove('pop'); void cardNodes[i].offsetWidth; cardNodes[i].classList.add('pop'); }
+        });
+        const broken = [];
+        rows.forEach(({ row, buttons, check }, r) => {
+          const attr = ATTRS[r];
+          buttons.forEach((button, i) => {
+            button.textContent = cards[i][attr];
+            button.setAttribute('aria-label', `Card ${i + 1} ${attr}: ${cards[i][attr]}. Click to change.`);
+          });
+          const distinct = new Set(cards.map(card => card[attr])).size;
+          const ok = distinct !== 2;
+          if (!ok) broken.push(attr);
+          row.className = ok ? 'is-ok' : 'is-bad';
+          check.innerHTML = ok
+                  ? `✓ <span class="word">${distinct === 1 ? 'all same' : 'all different'}</span>`
+                  : '✗ <span class="word">two match</span>';
+        });
+
+        const valid = isSet(...cards);
+        const output = $('#result-q2');
+        output.textContent = String(valid);
+        output.className = `out-value ${valid ? 'is-true' : 'is-false'}`;
+        flash(output);
+        $('#q2-why').textContent = valid
+                ? 'Valid set: every attribute is all the same or all different.'
+                : `Not a set: ${broken.join(' and ')} ${broken.length > 1 ? 'have' : 'has'} two matching and one different.`;
+        $('#q2-sample').hidden = cards.every((card, i) => sameCards(card, sampleCards[i]));
+      }
+
+      $('#q2-deal').addEventListener('click', () => {
+        const pick = attr => OPTIONS[attr][Math.floor(Math.random() * 3)];
+        const randomCard = () => Object.fromEntries(ATTRS.map(attr => [attr, pick(attr)]));
+        let a; let b;
+        do { a = randomCard(); b = randomCard(); } while (sameCards(a, b));
+        // Half the time, deal the one card that completes a set with a and b.
+        const c = Math.random() < 0.5
+                ? Object.fromEntries(ATTRS.map(attr => [attr,
+                  a[attr] === b[attr] ? a[attr] : OPTIONS[attr].find(v => v !== a[attr] && v !== b[attr])]))
+                : randomCard();
+        cards = [a, b, c];
+        render();
+      });
+      $('#q2-sample').addEventListener('click', () => { cards = sampleCards.map(card => ({ ...card })); render(); });
+      render([]);
+    }
+
+    /* ── Q3: live reverse with a trace of each pass ───────────────────── */
+    {
+      const input = $('#number-input');
+      const output = $('#result-q3');
+      const error = $('#input-error');
+      const tbody = $('#q3-trace tbody');
+      const traceNote = $('#q3-trace-note');
+      const zeroNote = $('#q3-zero-note');
+      const MAX_ROWS = 10;
+
+      // Display-only: digits are shown as text here, after the arithmetic is done.
+      function withLastDigit(value) {
+        const text = value.toString();
+        const mark = document.createElement('mark');
+        mark.textContent = text.slice(-1);
+        return [text.slice(0, -1), mark];
+      }
+
+      function renderTrace(number) {
+        const passes = [];
+        let rest = number < 0n ? -number : number;
+        let reversed = 0n;
+        while (rest > 0n) {
+          const digit = rest % 10n;
+          reversed = reversed * 10n + digit;
+          passes.push([rest, digit, reversed]);
+          rest /= 10n;
+        }
+        const shown = passes.length > MAX_ROWS ? passes.slice(0, MAX_ROWS - 1) : passes;
+        const rowsData = shown.map(([before, digit, after], i) =>
+                [String(i + 1), withLastDigit(before), [digit.toString()], withLastDigit(after)]);
+        if (passes.length > MAX_ROWS) rowsData.push(['…', [`${passes.length - shown.length} more passes`], [''], ['']]);
+
+        // Reuse rows that already exist so only new ones animate in.
+        rowsData.forEach((cells, i) => {
+          let row = tbody.rows[i];
+          if (!row) { row = tbody.insertRow(); for (let c = 0; c < 4; c++) row.insertCell(); }
+          row.className = cells[0] === '…' ? 'more' : '';
+          cells.forEach((content, c) => row.cells[c].replaceChildren(...[].concat(content)));
+        });
+        while (tbody.rows.length > rowsData.length) tbody.deleteRow(-1);
+
+        traceNote.textContent = passes.length === 0
+                ? 'Zero never enters the loop, so the answer is 0.'
+                : `${passes.length} ${passes.length === 1 ? 'pass' : 'passes'}, one per digit.${number < 0n ? ' The minus sign is set aside first and put back at the end.' : ''}`;
+      }
+
+      function render() {
+        const raw = input.value.trim();
+        const incomplete = raw === '' || raw === '-';
+        const valid = /^-?\d+$/.test(raw);
+        if (valid || incomplete) input.removeAttribute('aria-invalid');
+        else input.setAttribute('aria-invalid', 'true');
+        error.hidden = valid || incomplete;
+        error.textContent = 'Digits only, with an optional minus sign in front.';
+        if (!valid) {
+          output.textContent = '';
+          zeroNote.hidden = true;
+          tbody.replaceChildren();
+          traceNote.textContent = incomplete ? 'Type an integer to see each pass of the loop.' : '';
+          return;
+        }
+        const number = BigInt(raw);
+        const reversed = reverseNumber(number);
+        output.textContent = reversed.toString();
+        flash(output);
+        zeroNote.hidden = number === 0n || number % 10n !== 0n;
+        zeroNote.textContent = `${raw} ends in zero. Reversed, that zero would lead the number, and leading zeros don't survive in a number, so the answer is ${reversed}.`;
+        renderTrace(number);
+      }
+
+      input.addEventListener('input', render);
+      $$('#q3-examples .chip').forEach(chip => chip.addEventListener('click', () => {
+        input.value = chip.dataset.value;
+        render();
+        input.focus();
+      }));
+      render();
+    }
+
+    /* ── Q4: LEFT vs INNER JOIN on the sample tables ───────────────────── */
+    {
+      const demo = $('#q4-demo');
+      const studentRows = $$('#q4-students tbody tr');
+      const advisorRows = $$('#q4-advisors tbody tr');
+      const resultBody = $('#result-q4 tbody');
+      const cellText = (row, i) => row.cells[i].textContent.trim();
+
+      const students = studentRows.map(row => {
+        const advisor = cellText(row, 3);
+        row.dataset.student = cellText(row, 0);
+        row.dataset.advisor = advisor === 'NULL' ? '' : advisor;
+        return { id: row.dataset.student, name: `${cellText(row, 1)} ${cellText(row, 2)}`, advisorId: row.dataset.advisor || null, row };
+      });
+      const advisors = advisorRows.map(row => {
+        row.dataset.advisor = cellText(row, 0);
+        return { id: row.dataset.advisor, name: `${cellText(row, 1)} ${cellText(row, 2)}`, row };
+      });
+      advisors.filter(a => !students.some(s => s.advisorId === a.id)).forEach(a => {
+        const tag = document.createElement('span');
+        tag.className = 'mini';
+        tag.textContent = 'no students';
+        a.row.cells[2].append(tag);
+      });
+
+      const joinKeyword = $$('#q4 .listing .t-kw').find(token => token.textContent === 'LEFT');
+      const sqlFigure = joinKeyword.closest('.listing');
+      const answerSQL = listingText.get(sqlFigure);
+
+      function render(type) {
+        const rows = [];
+        for (const student of students) {
+          const advisor = advisors.find(a => a.id === student.advisorId);
+          if (!advisor && type === 'inner') continue;
+          rows.push({ student, advisor });
+        }
+        resultBody.replaceChildren(...rows.map(({ student, advisor }) => {
+          const tr = document.createElement('tr');
+          tr.tabIndex = 0;
+          tr.dataset.student = student.id;
+          tr.dataset.advisor = advisor ? advisor.id : '';
+          const cells = [student.id, student.name, advisor ? advisor.name : 'NULL'];
+          cells.forEach((text, i) => {
+            const td = tr.insertCell();
+            td.textContent = text;
+            if (i === 0) td.className = 'id';
+            if (!advisor && i === 2) td.className = 'null';
+          });
+          return tr;
+        }));
+        students.forEach(s => s.row.classList.toggle('is-dropped', type === 'inner' && !advisors.some(a => a.id === s.advisorId)));
+        $('#q4-count').textContent = `${rows.length} rows`;
+        $('#q4-explain').textContent = type === 'left'
+                ? 'David Wilson has no advisor, so LEFT JOIN keeps him and fills advisor_name with NULL. Faith Lambert advises nobody and doesn\u2019t appear, because the query starts from Students.'
+                : 'INNER JOIN only keeps students who match an advisor, so David Wilson drops out. That missing row is why the answer uses LEFT JOIN.';
+
+        joinKeyword.textContent = type === 'left' ? 'LEFT' : 'INNER';
+        joinKeyword.classList.remove('swapped'); void joinKeyword.offsetWidth; joinKeyword.classList.add('swapped');
+        listingText.set(sqlFigure, type === 'left' ? answerSQL : answerSQL.replace('LEFT JOIN', 'INNER JOIN'));
+        const file = $('.file', sqlFigure);
+        file.textContent = type === 'left' ? 'question-4.sql' : 'question-4.sql (INNER JOIN, for comparison)';
+      }
+
+      // Point at any row and light up everything it's joined to.
+      function link(row) {
+        $$('tr.is-linked', demo).forEach(r => r.classList.remove('is-linked'));
+        if (!row) return;
+        const studentId = row.dataset.student;
+        const advisorId = row.dataset.advisor;
+        const byStudent = studentId !== undefined;
+        $$('tbody tr', demo).forEach(r => {
+          const match = byStudent
+                  ? r.dataset.student === studentId || (advisorId && r.dataset.advisor === advisorId && r.dataset.student === undefined)
+                  : r.dataset.advisor === advisorId;
+          if (match) r.classList.add('is-linked');
+        });
+      }
+      demo.addEventListener('pointerover', event => link(event.target.closest('tbody tr')));
+      demo.addEventListener('pointerleave', () => link(null));
+      demo.addEventListener('focusin', event => link(event.target.closest('tbody tr')));
+      demo.addEventListener('focusout', () => link(null));
+
+      $$('input[name="q4-join"]').forEach(radio => radio.addEventListener('change', () => render(radio.value)));
+      render('left');
+      joinKeyword.classList.remove('swapped');
+    }
+
+    /* ── Q5: legends, palette switch, replay on scroll ─────────────────── */
+    const chartsIn = root => creditCharts.filter(chart => root.contains(chart.canvas));
+
+    $$('.legend').forEach(legend => {
+      const section = legend.closest('section');
+      const buttons = $$('button', legend);
+      let pinned;
+      const show = index => highlightBenchmark(chartsIn(section), index);
+      const pin = index => {
+        pinned = index;
+        buttons.forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.index) === pinned)));
+        show(pinned);
+      };
+      buttons.forEach(button => {
+        const index = Number(button.dataset.index);
+        button.addEventListener('mouseenter', () => show(index));
+        button.addEventListener('focus', () => show(index));
+        button.addEventListener('mouseleave', () => show(pinned));
+        button.addEventListener('blur', () => show(pinned));
+        button.addEventListener('click', () => pin(pinned === index ? undefined : index));
+      });
+      // After the chart's own mouseleave clears the highlight, restore the pinned one.
+      $$('canvas', section).forEach(canvas => canvas.addEventListener('mouseleave', () => show(pinned)));
+    });
+
+    function paintSwatches(name) {
+      creditPalettes[name].forEach((color, i) => document.documentElement.style.setProperty(`--c${i}`, color));
+    }
+    $$('input[name="q5-palette"]').forEach(radio => radio.addEventListener('change', () => {
+      setCreditPalette(radio.value);
+      paintSwatches(radio.value);
+    }));
+
+    if (typeof Chart !== 'undefined') {
+      // Grow the bars when a chart scrolls into view, not while it's off screen.
+      if (animateCharts) {
+        const replay = new IntersectionObserver(entries => entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          replay.unobserve(entry.target);
+          chartsIn(entry.target).forEach(chart => { chart.reset(); chart.update(); });
+        }), { threshold: 0.4 });
+        $$('.charts-grid').forEach(grid => replay.observe(grid));
+      }
+      // Canvas text uses whatever font is loaded at draw time; redraw once the web fonts arrive.
+      document.fonts?.ready.then(() => creditCharts.forEach(chart => chart.update('none')));
+    }
+
+    /* ── Q5(b): request pipeline, URL and the live JSON listing ───────── */
+    {
+      const form = $('#q5b-filters');
+      const steps = $$('#q5b-pipeline li');
+      const jsonFigure = $('#q5b-json');
+      let timers = [];
+
+      const filters = () => Object.fromEntries(new FormData(form));
+      function showURL() {
+        const { schoolId, year } = filters();
+        $('#q5b-url').textContent = `/api/credit-accumulation?${new URLSearchParams({ schoolId, year })}`;
+      }
+
+      function setSteps(states, stagger = 0) {
+        timers.forEach(clearTimeout);
+        timers = states.map((state, i) => setTimeout(() => { steps[i].dataset.state = state; }, i * stagger));
+      }
+
+      function formatJSON(value) {
+        return JSON.stringify(value, null, 2)
+                .replace(/\[\n\s+([^[\]{}]*?)\n\s+\]/g, (_, inner) => `[${inner.split(/,\n\s+/).join(', ')}]`);
+      }
+
+      function onStatus() {
+        const state = statusLine.dataset.state;
+        const demo = filters().source === 'demo';
+        const server = state => (demo ? 'skipped' : state);
+        if (state === 'loading') {
+          setSteps(['done', demo ? 'active' : 'done', server('active'), server('idle'), 'idle']);
+        } else if (state === 'ok') {
+          setSteps(['done', 'done', server('done'), server('done'), 'done'], 70);
+          const { schoolId, year } = filters();
+          const data = {
+            schoolId,
+            year: Number(year),
+            categories: [...dynamicCharts.allStudents.data.labels],
+            series: {
+              allStudents: [...dynamicCharts.allStudents.data.datasets[0].data],
+              swd: [...dynamicCharts.swd.data.datasets[0].data]
+            }
+          };
+          jsonFigure.dataset.tag = `live: ${schoolId}, ${year}`;
+          setListing(jsonFigure, formatJSON(data));
+        } else if (state === 'error') {
+          setSteps(['done', demo ? 'failed' : 'done', server('failed'), server('idle'), 'idle']);
+        }
+      }
+
+      form.addEventListener('change', showURL);
+      new MutationObserver(onStatus).observe(statusLine, { attributes: true, attributeFilter: ['data-state'] });
+      showURL();
+      onStatus();
+    }
+  })();
+</script>
+</body>
+</html>
